@@ -9,13 +9,14 @@ import bpy
 
 class Np1d_panel(bpy.types.Panel):
     bl_idname = 'np1d.panel'
-    bl_label = 'NP_1D_Panel'
+    bl_label = 'NP_1D'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = '1D'
 
     def draw(self, context):
-        self.layout.operator("replica.replica", text="Replica")
+        self.layout.operator("np1d.zzmove", text="ZZ Move")
+        self.layout.operator("np1d.cccopy", text="CC Copy")
 
 
 def register():
