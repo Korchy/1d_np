@@ -164,6 +164,7 @@ class Np1d:
             bpy.ops.object.duplicate(linked=point[1])
             bpy.context.area.spaces.active.cursor_location = point[0] - __class__.__anchoroffset
             bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+        __class__.restoreselection()
         __class__.restorecursor3dposition()
 
     @staticmethod
