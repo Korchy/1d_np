@@ -185,7 +185,9 @@ class Np1dCCCopy(bpy.types.Operator):
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
-                Np1d.anchor().select = True
+                anchor = Np1d.anchor()
+                anchor.select = True
+                bpy.context.scene.objects.active = anchor
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -252,7 +254,9 @@ class Np1dZZMove(bpy.types.Operator):
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
-                Np1d.anchor().select = True
+                anchor = Np1d.anchor()
+                anchor.select = True
+                bpy.context.scene.objects.active = anchor
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
