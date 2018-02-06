@@ -221,6 +221,7 @@ class Np1dCCCopy(bpy.types.Operator):
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
         elif event.type == 'ESC':
             Np1d.selectiontostartlocation()
+            Np1d.clear()
             return {'CANCELLED'}
         return {'PASS_THROUGH'}
 
@@ -285,6 +286,7 @@ class Np1dZZMove(bpy.types.Operator):
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
         elif event.type == 'ESC':
             Np1d.selectiontostartlocation()
+            Np1d.clear()
             return {'CANCELLED'}
         return {'PASS_THROUGH'}
 
