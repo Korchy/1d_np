@@ -18,6 +18,8 @@ class Np1d_panel(bpy.types.Panel):
         self.layout.operator("np1d.zzmove", text="ZZ Move")
         self.layout.operator("np1d.cccopy", text="CC Copy")
 
+        self.layout.operator("np1d.test", text="Test")
+
 
 def register():
     bpy.utils.register_class(Np1d_panel)
