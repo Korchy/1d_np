@@ -212,8 +212,6 @@ class Np1d:
     @staticmethod
     def selectiontoanchor():
         __class__.savecursor3dposition()
-        print(__class__.anchorlocation())
-        print(__class__.__anchoroffset)
         bpy.context.area.spaces.active.cursor_location = __class__.anchorlocation() - __class__.__anchoroffset
         __class__.deselectanchor()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
@@ -243,7 +241,6 @@ class Np1d:
 
     @staticmethod
     def replicateonpoints():
-        print(__class__.__replicationpoints)
         __class__.savecursor3dposition()
         __class__.restoreselection()
         __class__.deselectanchor()
