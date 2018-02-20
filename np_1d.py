@@ -17,12 +17,11 @@ class Np1d:
         'pivot_point': 'MEDIAN_POINT',
         'transform_orientation': 'GLOBAL'
     }
-    # __meshmode = None
     __environment = {}
     __anchorname = '1D_NP_Place'
-    __cursor3d_location = None
+    __cursor3d_location = []
     __anchor = None
-    __anchoroffset = None
+    __anchoroffset = Vector((0,0,0))
     __selection = []
     __selectionlocation = None
     __mode = []   # list: SELECT, TRANSLATE, NAVIGATE
@@ -53,15 +52,6 @@ class Np1d:
         bpy.context.tool_settings.snap_target = __class__.__localenvironment['snap_target']
         bpy.context.space_data.pivot_point = __class__.__localenvironment['pivot_point']
         bpy.context.space_data.transform_orientation = __class__.__localenvironment['transform_orientation']
-
-
-    # @staticmethod
-    # def savemeshmode(meshmode):
-    #     __class__.__meshmode = meshmode
-    #
-    # @staticmethod
-    # def getmeshmode():
-    #     return __class__.__meshmode
 
     @staticmethod
     def savetempselection():
@@ -104,10 +94,9 @@ class Np1d:
                 __class__.__anchor.layers[bpy.context.screen.scene.active_layer] = True
         elif bpy.context.active_object.mode == 'EDIT':
             # anchor = vertex.id
-            if not (__class__.__anchor and isinstance(__class__.__anchor, int)):
-                vertices = bpy.context.active_object.data.vertices[:]
+            if not (__class__.__anchor is not None and isinstance(__class__.__anchor, int) and __class__.__anchor < len(bpy.context.active_object.data.vertices)):
                 bpy.ops.mesh.primitive_vert_add()
-                __class__.__anchor = list(set(bpy.context.active_object.data.vertices) - set(vertices))[0].index
+                __class__.__anchor = len(bpy.context.active_object.data.vertices) - 1
         return __class__.__anchor
 
     @staticmethod
@@ -144,7 +133,12 @@ class Np1d:
         if bpy.context.active_object.mode == 'OBJECT':
             return __class__.anchor().location
         elif bpy.context.active_object.mode == 'EDIT':
-            return bpy.context.active_object.data.vertices[__class__.anchor()].co
+            __class__.savecursor3dposition()
+            __class__.activateanchor()
+            bpy.ops.view3d.snap_cursor_to_active()
+            anchorlocation = bpy.context.area.spaces.active.cursor_location.copy()
+            __class__.restorecursor3dposition()
+            return anchorlocation
 
     @staticmethod
     def anchortomousecursor():
@@ -159,24 +153,24 @@ class Np1d:
 
     @staticmethod
     def removeanchor():
-        __class__.deselectanchor()
-        if bpy.context.active_object.mode == 'EDIT':
-            __class__.savetempselection()
-            __class__.deselect()
-            __class__.selectanchor()
-            bpy.ops.mesh.delete(type='VERT')
-            __class__.__anchor = None
-            __class__.restoretempselection()
+        if __class__.__anchor is not None:
+            __class__.deselectanchor()
+            if bpy.context.active_object.mode == 'EDIT':
+                __class__.savetempselection()
+                __class__.deselect()
+                __class__.selectanchor()
+                bpy.ops.mesh.delete(type='VERT')
+                __class__.__anchor = None
+                __class__.restoretempselection()
 
     @staticmethod
     def savecursor3dposition():
-        __class__.__cursor3d_location = list(bpy.context.area.spaces.active.cursor_location)
+        __class__.__cursor3d_location.append(bpy.context.area.spaces.active.cursor_location.copy())
 
     @staticmethod
     def restorecursor3dposition():
         if __class__.__cursor3d_location:
-            bpy.context.area.spaces.active.cursor_location = __class__.__cursor3d_location
-            __class__.__cursor3d_location = None
+            bpy.context.area.spaces.active.cursor_location = __class__.__cursor3d_location.pop()
 
     @staticmethod
     def saveanchorselectionoffset():
@@ -193,7 +187,7 @@ class Np1d:
             bpy.ops.object.mode_set(mode='EDIT')
         __class__.savecursor3dposition()
         bpy.ops.view3d.snap_cursor_to_selected()
-        __class__.__selectionlocation = Vector(bpy.context.area.spaces.active.cursor_location)
+        __class__.__selectionlocation = bpy.context.area.spaces.active.cursor_location.copy()
         __class__.restorecursor3dposition()
 
     @staticmethod
@@ -218,7 +212,9 @@ class Np1d:
     @staticmethod
     def selectiontoanchor():
         __class__.savecursor3dposition()
-        bpy.context.area.spaces.active.cursor_location = list(__class__.anchorlocation() - __class__.__anchoroffset)
+        print(__class__.anchorlocation())
+        print(__class__.__anchoroffset)
+        bpy.context.area.spaces.active.cursor_location = __class__.anchorlocation() - __class__.__anchoroffset
         __class__.deselectanchor()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
         __class__.selectanchor()
@@ -227,59 +223,50 @@ class Np1d:
     @staticmethod
     def selectiontostartlocation():
         __class__.savecursor3dposition()
-        bpy.context.area.spaces.active.cursor_location = list(__class__.__selectionlocation)
+        bpy.context.area.spaces.active.cursor_location = __class__.__selectionlocation
         __class__.restoreselection()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
         __class__.restorecursor3dposition()
 
     @staticmethod
     def getmode(offset=0):
-        return __class__.__mode[-1 + offset]
+        index = -1 + offset if abs(-1 + offset) <= len(__class__.__mode) else -1
+        return __class__.__mode[index]
 
     @staticmethod
     def setmode(mode):
         __class__.__mode.append(mode)
 
     @staticmethod
-    def addreplicationpoint(instance = False):
-        __class__.__replicationpoints.append((__class__.anchor().location.copy(), instance))
+    def addreplicationpoint(instance=False):
+        __class__.__replicationpoints.append((__class__.anchorlocation().copy(), instance))
 
     @staticmethod
     def replicateonpoints():
+        print(__class__.__replicationpoints)
         __class__.savecursor3dposition()
         __class__.restoreselection()
-        __class__.anchor().select = False
+        __class__.deselectanchor()
         for point in __class__.__replicationpoints:
-            bpy.ops.object.duplicate(linked=point[1])
-            bpy.context.area.spaces.active.cursor_location = point[0] - __class__.__anchoroffset
-            bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+            if bpy.context.active_object.mode == 'OBJECT':
+                bpy.ops.object.duplicate(linked=point[1])
+                bpy.context.area.spaces.active.cursor_location = point[0] - __class__.__anchoroffset
+                bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+            elif bpy.context.active_object.mode == 'EDIT':
+                bpy.ops.mesh.duplicate()
+                bpy.context.area.spaces.active.cursor_location = point[0] - __class__.__anchoroffset
+                bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
         __class__.restoreselection()
         __class__.restorecursor3dposition()
 
     @staticmethod
     def clear():
         __class__.__mode = []
+        __cursor3d_location = []
         __class__.setenvironment()
         __class__.__replicationpoints = []
-        # __class__.anchor().select = False
         __class__.removeanchor()
-
-
-class test(bpy.types.Operator):
-    bl_idname = 'np1d.test'
-    bl_label = 'test'
-
-    def execute(self, context):
-        # Np1d.savemeshmode(bpy.context.active_object.mode)
-        Np1d.saveselection()
-        Np1d.restoreselection()
-        Np1d.anchor()
-        Np1d.deselect()
-        Np1d.selectanchor()
-        Np1d.anchortomousecursor()
-        Np1d.activateanchor()
-        Np1d.clear()
-        return {'FINISHED'}
+        __class__.__anchoroffset = Vector((0,0,0))
 
 
 class Np1dCCCopy(bpy.types.Operator):
@@ -292,9 +279,8 @@ class Np1dCCCopy(bpy.types.Operator):
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
-                anchor = Np1d.anchor()
-                anchor.select = True
-                bpy.context.scene.objects.active = anchor
+                Np1d.selectanchor()
+                Np1d.activateanchor()
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -311,20 +297,24 @@ class Np1dCCCopy(bpy.types.Operator):
                 return {'FINISHED'}
         elif event.type == 'SPACE':
             if event.value == 'RELEASE':
-                Np1d.setmode('NAVIGATE')
-                Np1d.selectiontostartlocation()
+                if Np1d.getmode() == 'TRANSLATE':
+                    Np1d.selectiontostartlocation()
                 Np1d.setenvironment()
+                Np1d.setmode('NAVIGATE')
             elif event.value == 'PRESS':
-                Np1d.setmode(Np1d.getmode(-1))
-                Np1d.setlocalenvironment()
-                Np1d.restoreselection()
-                anchor = Np1d.anchor()
-                anchor.select = True
-                Np1d.anchortomousecursor()
-                Np1d.selectiontoanchor()
-                bpy.context.scene.objects.active = anchor
-                bpy.ops.transform.translate('INVOKE_DEFAULT')
-                return {'INTERFACE'}
+                if Np1d.getmode() == 'NAVIGATE':
+                    modetoreturn = Np1d.getmode(-1)
+                    Np1d.setmode(modetoreturn)
+                    Np1d.setlocalenvironment()
+                    if modetoreturn == 'TRANSLATE':
+                        Np1d.restoreselection()
+                    Np1d.selectanchor()
+                    Np1d.anchortomousecursor()
+                    if modetoreturn == 'TRANSLATE':
+                        Np1d.selectiontoanchor()
+                    Np1d.activateanchor()
+                    bpy.ops.transform.translate('INVOKE_DEFAULT')
+                    return {'INTERFACE'}
         elif event.type == 'RIGHTMOUSE':
             if Np1d.getmode() != 'NAVIGATE':
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -338,8 +328,8 @@ class Np1dCCCopy(bpy.types.Operator):
         Np1d.saveenvironment()
         Np1d.saveselection()
         Np1d.setlocalenvironment()
-        bpy.ops.object.select_all(action='DESELECT')
-        Np1d.anchor().select = True
+        Np1d.deselect()
+        Np1d.selectanchor()
         Np1d.anchortomousecursor()
         Np1d.setmode('SELECT')
         bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -361,10 +351,7 @@ class Np1dZZMove(bpy.types.Operator):
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
-                anchor = Np1d.anchor()
-                # anchor.select = True
                 Np1d.selectanchor()
-                # bpy.context.scene.objects.active = anchor
                 Np1d.activateanchor()
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
@@ -380,23 +367,24 @@ class Np1dZZMove(bpy.types.Operator):
                 return {'FINISHED'}
         elif event.type == 'SPACE':
             if event.value == 'RELEASE':
-                Np1d.setmode('NAVIGATE')
-                Np1d.selectiontostartlocation()
+                if Np1d.getmode() == 'TRANSLATE':
+                    Np1d.selectiontostartlocation()
                 Np1d.setenvironment()
+                Np1d.setmode('NAVIGATE')
             elif event.value == 'PRESS':
-                Np1d.setmode(Np1d.getmode(-1))
-                Np1d.setlocalenvironment()
-                Np1d.restoreselection()
-                anchor = Np1d.anchor()
-                # anchor.select = True
-                # bpy.context.scene.objects.active = anchor
-                Np1d.selectanchor()
-                # Np1d.activateanchor()
-                Np1d.anchortomousecursor()
-                Np1d.selectiontoanchor()
-                Np1d.activateanchor()
-                bpy.ops.transform.translate('INVOKE_DEFAULT')
-                return {'INTERFACE'}
+                if Np1d.getmode() == 'NAVIGATE':
+                    modetoreturn = Np1d.getmode(-1)
+                    Np1d.setmode(modetoreturn)
+                    Np1d.setlocalenvironment()
+                    if modetoreturn == 'TRANSLATE':
+                        Np1d.restoreselection()
+                    Np1d.selectanchor()
+                    Np1d.anchortomousecursor()
+                    if modetoreturn == 'TRANSLATE':
+                        Np1d.selectiontoanchor()
+                    Np1d.activateanchor()
+                    bpy.ops.transform.translate('INVOKE_DEFAULT')
+                    return {'INTERFACE'}
         elif event.type == 'RIGHTMOUSE':
             if Np1d.getmode() != 'NAVIGATE':
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -407,13 +395,10 @@ class Np1dZZMove(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
-        # Np1d.savemeshmode(context.active_object.mode)
         Np1d.saveenvironment()
         Np1d.saveselection()
         Np1d.setlocalenvironment()
-        # bpy.ops.object.select_all(action='DESELECT')
         Np1d.deselect()
-        # Np1d.anchor().select = True
         Np1d.selectanchor()
         Np1d.anchortomousecursor()
         Np1d.setmode('SELECT')
@@ -429,10 +414,8 @@ class Np1dZZMove(bpy.types.Operator):
 def register():
     bpy.utils.register_class(Np1dZZMove)
     bpy.utils.register_class(Np1dCCCopy)
-    bpy.utils.register_class(test)
 
 
 def unregister():
-    bpy.utils.unregister_class(test)
     bpy.utils.unregister_class(Np1dCCCopy)
     bpy.utils.unregister_class(Np1dZZMove)
