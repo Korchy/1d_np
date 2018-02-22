@@ -404,9 +404,6 @@ class Np1dZZMove(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
-        # if Np1d.getmode() != 'NONE':
-        #     Np1d.clear()
-        #     return {'FINISHED'}
         Np1d.saveenvironment()
         Np1d.saveselection()
         Np1d.setlocalenvironment()
