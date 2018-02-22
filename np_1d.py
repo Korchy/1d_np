@@ -24,7 +24,7 @@ class Np1d:
     __anchoroffset = Vector((0,0,0))
     __selection = []
     __selectionlocation = Vector((0,0,0))
-    __mode = []   # list: SELECT, TRANSLATE, NAVIGATE
+    __mode = []   # list: NONE, SELECT, TRANSLATE, NAVIGATE
     __replicationpoints = []
     __tempselection = []
 
@@ -201,7 +201,6 @@ class Np1d:
             bpy.ops.object.mode_set(mode='OBJECT')
             for vertexid in __class__.__selection:
                 bpy.context.active_object.data.vertices[vertexid].select = True
-                # bpy.context.edit_object.data.vertices[vertexid].select = True
             bpy.ops.object.mode_set(mode='EDIT')
 
     @staticmethod
@@ -231,8 +230,11 @@ class Np1d:
 
     @staticmethod
     def getmode(offset=0):
-        index = -1 + offset if abs(-1 + offset) <= len(__class__.__mode) else -1
-        return __class__.__mode[index]
+        if __class__.__mode:
+            index = -1 + offset if abs(-1 + offset) <= len(__class__.__mode) else -1
+            return __class__.__mode[index]
+        else:
+            return 'NONE'
 
     @staticmethod
     def setmode(mode):
@@ -262,6 +264,7 @@ class Np1d:
     @staticmethod
     def clear():
         __class__.__mode = []
+        __class__.__selection = []
         __class__.__cursor3d_location = []
         __class__.setenvironment()
         __class__.__replicationpoints = []
@@ -277,6 +280,9 @@ class Np1dCCCopy(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def modal(self, context, event):
+        if Np1d.getmode() == 'NONE':
+            Np1d.setmode('SELECT')
+            bpy.ops.transform.translate('INVOKE_DEFAULT')
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
@@ -332,8 +338,7 @@ class Np1dCCCopy(bpy.types.Operator):
         Np1d.deselect()
         Np1d.selectanchor()
         Np1d.anchortomousecursor()
-        Np1d.setmode('SELECT')
-        bpy.ops.transform.translate('INVOKE_DEFAULT')
+        Np1d.setmode('NONE')
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -349,6 +354,9 @@ class Np1dZZMove(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def modal(self, context, event):
+        if Np1d.getmode() == 'NONE':
+            Np1d.setmode('SELECT')
+            bpy.ops.transform.translate('INVOKE_DEFAULT')
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
@@ -396,14 +404,16 @@ class Np1dZZMove(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
+        # if Np1d.getmode() != 'NONE':
+        #     Np1d.clear()
+        #     return {'FINISHED'}
         Np1d.saveenvironment()
         Np1d.saveselection()
         Np1d.setlocalenvironment()
         Np1d.deselect()
         Np1d.selectanchor()
         Np1d.anchortomousecursor()
-        Np1d.setmode('SELECT')
-        bpy.ops.transform.translate('INVOKE_DEFAULT')
+        Np1d.setmode('NONE')
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
