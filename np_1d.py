@@ -23,7 +23,7 @@ class Np1d:
     __anchor = None
     __anchoroffset = Vector((0,0,0))
     __selection = []
-    __selectionlocation = None
+    __selectionlocation = Vector((0,0,0))
     __mode = []   # list: SELECT, TRANSLATE, NAVIGATE
     __replicationpoints = []
     __tempselection = []
@@ -56,21 +56,22 @@ class Np1d:
     @staticmethod
     def savetempselection():
         if bpy.context.active_object.mode == 'OBJECT':
-            __class__.__tempselection = bpy.context.selected_objects
+            __class__.__tempselection.append(bpy.context.selected_objects)
         elif bpy.context.active_object.mode == 'EDIT':
             bpy.ops.object.mode_set(mode='OBJECT')
-            __class__.__tempselection = [vertex.index for vertex in bpy.context.active_object.data.vertices if vertex.select]
+            __class__.__tempselection.append([vertex.index for vertex in bpy.context.active_object.data.vertices if vertex.select])
             bpy.ops.object.mode_set(mode='EDIT')
 
     @staticmethod
     def restoretempselection():
         __class__.deselect()
+        tempselection = __class__.__tempselection.pop()
         if bpy.context.active_object.mode == 'OBJECT':
-            for obj in __class__.__tempselection:
+            for obj in tempselection:
                 obj.select = True
         elif bpy.context.active_object.mode == 'EDIT':
             bpy.ops.object.mode_set(mode='OBJECT')
-            for vertexid in __class__.__tempselection:
+            for vertexid in tempselection:
                 bpy.context.active_object.data.vertices[vertexid].select = True
             bpy.ops.object.mode_set(mode='EDIT')
 
@@ -200,6 +201,7 @@ class Np1d:
             bpy.ops.object.mode_set(mode='OBJECT')
             for vertexid in __class__.__selection:
                 bpy.context.active_object.data.vertices[vertexid].select = True
+                # bpy.context.edit_object.data.vertices[vertexid].select = True
             bpy.ops.object.mode_set(mode='EDIT')
 
     @staticmethod
@@ -220,11 +222,12 @@ class Np1d:
 
     @staticmethod
     def selectiontostartlocation():
-        __class__.savecursor3dposition()
-        bpy.context.area.spaces.active.cursor_location = __class__.__selectionlocation
-        __class__.restoreselection()
-        bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
-        __class__.restorecursor3dposition()
+        if __class__.__selection:
+            __class__.savecursor3dposition()
+            bpy.context.area.spaces.active.cursor_location = __class__.__selectionlocation
+            __class__.restoreselection()
+            bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+            __class__.restorecursor3dposition()
 
     @staticmethod
     def getmode(offset=0):
@@ -259,11 +262,12 @@ class Np1d:
     @staticmethod
     def clear():
         __class__.__mode = []
-        __cursor3d_location = []
+        __class__.__cursor3d_location = []
         __class__.setenvironment()
         __class__.__replicationpoints = []
         __class__.removeanchor()
         __class__.__anchoroffset = Vector((0,0,0))
+        __class__.__selectionlocation = Vector((0,0,0))
 
 
 class Np1dCCCopy(bpy.types.Operator):
