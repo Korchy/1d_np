@@ -103,7 +103,7 @@ class Np1d:
                 bm.verts.index_update()
                 __class__.__anchor = v.index
                 bmesh.update_edit_mesh(bpy.context.active_object.data)
-                bm.free()
+                # bm.free()
                 # __class__.__anchor = len(bpy.context.active_object.data.vertices) - 1
         return __class__.__anchor
 
