@@ -95,9 +95,16 @@ class Np1d:
                 __class__.__anchor.layers[bpy.context.screen.scene.active_layer] = True
         elif bpy.context.active_object.mode == 'EDIT':
             # anchor = vertex.id
-            if not (__class__.__anchor is not None and isinstance(__class__.__anchor, int) and __class__.__anchor < len(bpy.context.active_object.data.vertices)):
-                bpy.ops.mesh.primitive_vert_add()
-                __class__.__anchor = len(bpy.context.active_object.data.vertices) - 1
+#            if not (__class__.__anchor is not None and isinstance(__class__.__anchor, int) and __class__.__anchor < len(bpy.context.active_object.data.vertices)):
+            if __class__.__anchor is None or (not isinstance(__class__.__anchor, int)) or (isinstance(__class__.__anchor, int) and __class__.__anchor >= len(bpy.context.active_object.data.vertices)):
+                # bpy.ops.mesh.primitive_vert_add()
+                bm = bmesh.from_edit_mesh(bpy.context.active_object.data)
+                v = bm.verts.new((0, 0, 0))
+                bm.verts.index_update()
+                __class__.__anchor = v.index
+                bmesh.update_edit_mesh(bpy.context.active_object.data)
+                bm.free()
+                # __class__.__anchor = len(bpy.context.active_object.data.vertices) - 1
         return __class__.__anchor
 
     @staticmethod
