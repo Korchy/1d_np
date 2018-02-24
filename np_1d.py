@@ -346,7 +346,6 @@ class Np1dCCCopy(bpy.types.Operator):
 
     def cancel(self, context):
         Np1d.clear()
-        pass
         return None
 
 
