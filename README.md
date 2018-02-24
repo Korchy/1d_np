@@ -4,7 +4,7 @@ Fully remake of the 1d_np_scripts.
 
 Current Version
 -
-1.1.16
+1.1.17
 
 Functionality
 -
@@ -42,7 +42,7 @@ Developers
 
 Version history
 -
-**v.1.1.16.**
+**v.1.1.17.**
 - Bug fixes
 
 **v.1.1.0.**

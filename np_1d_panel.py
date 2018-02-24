@@ -2,7 +2,12 @@
 # interplanety@interplanety.org
 #
 # GitHub
-# https://github.com/Korchy/1d_np
+#   https://github.com/Korchy/1d_np
+#
+# Version history:
+#   1.1. - Extended to Edit mode
+#   1.0. - ZZMove, CCCopy. Object mode
+
 
 import bpy
 
