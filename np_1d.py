@@ -345,7 +345,7 @@ class Np1dCCCopy(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
-        Np1d.clear() 
+        Np1d.clear()   
         return None
 
 
