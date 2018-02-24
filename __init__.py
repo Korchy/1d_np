@@ -9,7 +9,7 @@ bl_info = {
     'name': '1D_NP',
     'category': 'Mesh',
     'author': 'Nikita Akimov',
-    'version': (0, 0, 1),
+    'version': (1, 1, 16),
     'blender': (2, 79, 0),
     'location': '3DView window - T-panel - 1D',
     'wiki_url': '',

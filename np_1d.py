@@ -95,16 +95,12 @@ class Np1d:
                 __class__.__anchor.layers[bpy.context.screen.scene.active_layer] = True
         elif bpy.context.active_object.mode == 'EDIT':
             # anchor = vertex.id
-#            if not (__class__.__anchor is not None and isinstance(__class__.__anchor, int) and __class__.__anchor < len(bpy.context.active_object.data.vertices)):
             if __class__.__anchor is None or (not isinstance(__class__.__anchor, int)) or (isinstance(__class__.__anchor, int) and __class__.__anchor >= len(bpy.context.active_object.data.vertices)):
-                # bpy.ops.mesh.primitive_vert_add()
                 bm = bmesh.from_edit_mesh(bpy.context.active_object.data)
                 v = bm.verts.new((0, 0, 0))
                 bm.verts.index_update()
                 __class__.__anchor = v.index
                 bmesh.update_edit_mesh(bpy.context.active_object.data)
-                # bm.free()
-                # __class__.__anchor = len(bpy.context.active_object.data.vertices) - 1
         return __class__.__anchor
 
     @staticmethod
@@ -116,6 +112,7 @@ class Np1d:
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.context.active_object.data.vertices[anchor].select = True
             bpy.ops.object.mode_set(mode='EDIT')
+        __class__.activateanchor()
 
     @staticmethod
     def deselectanchor():
@@ -289,12 +286,12 @@ class Np1dCCCopy(bpy.types.Operator):
     def modal(self, context, event):
         if Np1d.getmode() == 'NONE':
             Np1d.setmode('SELECT')
+            Np1d.selectanchor()
             bpy.ops.transform.translate('INVOKE_DEFAULT')
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
                 Np1d.selectanchor()
-                Np1d.activateanchor()
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -322,7 +319,6 @@ class Np1dCCCopy(bpy.types.Operator):
                     Np1d.setlocalenvironment()
                     if modetoreturn == 'TRANSLATE':
                         Np1d.restoreselection()
-                    Np1d.selectanchor()
                     Np1d.anchortomousecursor()
                     if modetoreturn == 'TRANSLATE':
                         Np1d.selectiontoanchor()
@@ -343,7 +339,6 @@ class Np1dCCCopy(bpy.types.Operator):
         Np1d.saveselection()
         Np1d.setlocalenvironment()
         Np1d.deselect()
-        Np1d.selectanchor()
         Np1d.anchortomousecursor()
         Np1d.setmode('NONE')
         context.window_manager.modal_handler_add(self)
@@ -363,12 +358,12 @@ class Np1dZZMove(bpy.types.Operator):
     def modal(self, context, event):
         if Np1d.getmode() == 'NONE':
             Np1d.setmode('SELECT')
+            Np1d.selectanchor()
             bpy.ops.transform.translate('INVOKE_DEFAULT')
         if event.type == 'LEFTMOUSE':
             if Np1d.getmode() == 'SELECT':
                 Np1d.restoreselection()
                 Np1d.selectanchor()
-                Np1d.activateanchor()
                 Np1d.saveanchorselectionoffset()
                 Np1d.setmode('TRANSLATE')
                 bpy.ops.transform.translate('INVOKE_DEFAULT')
@@ -394,7 +389,6 @@ class Np1dZZMove(bpy.types.Operator):
                     Np1d.setlocalenvironment()
                     if modetoreturn == 'TRANSLATE':
                         Np1d.restoreselection()
-                    Np1d.selectanchor()
                     Np1d.anchortomousecursor()
                     if modetoreturn == 'TRANSLATE':
                         Np1d.selectiontoanchor()
@@ -415,7 +409,6 @@ class Np1dZZMove(bpy.types.Operator):
         Np1d.saveselection()
         Np1d.setlocalenvironment()
         Np1d.deselect()
-        Np1d.selectanchor()
         Np1d.anchortomousecursor()
         Np1d.setmode('NONE')
         context.window_manager.modal_handler_add(self)
